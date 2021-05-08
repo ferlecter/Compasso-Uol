@@ -1,5 +1,6 @@
 package com.compassouol.productms.controller;
 
+import com.compassouol.productms.ReturnBean;
 import com.compassouol.productms.model.Product;
 import com.compassouol.productms.repository.ProductRepository;
 import java.util.List;
@@ -31,34 +32,33 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<Product>> getAllTutorials() {
+    public ResponseEntity<List<Product>> getAllProducts() {
         List<Product> products = (List<Product>) productRepository.findAll();
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
-   
     @GetMapping("/products/search")
-    public ResponseEntity<List<Product>> Search(@RequestParam(value = "min_price", required = false) float minValue,
-            @RequestParam(value = "max_price", required = false) float maxValue,
-            @RequestParam(value = "q", required = false) String q) {
-        List<Product> products = (List<Product>) productRepository.getByDescription(q,maxValue,minValue);
+    public ResponseEntity<List<Product>> Search(@RequestParam(value = "min_price", required = false, defaultValue = "0.0f") float minValue,
+            @RequestParam(value = "max_price", required = false, defaultValue = "0.0f") float maxValue,
+            @RequestParam(value = "q", required = false, defaultValue = "") String q) {
+        List<Product> products = (List<Product>) productRepository.getByDescription(q, maxValue, minValue);
+
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
     @PostMapping("/products")
-    public ResponseEntity<Product> save(@RequestBody Product pr) {
+    public ResponseEntity<?> save(@RequestBody Product pr) {
 
-        if (pr.getPrice() <= 0) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        try {
+            return new ResponseEntity<>(this.productRepository.saveProduct(pr), HttpStatus.CREATED);
+        } catch (Exception e) {
+            ReturnBean returnBean = new ReturnBean(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+            return new ResponseEntity<>(returnBean, HttpStatus.BAD_REQUEST);
         }
-        Product product = this.productRepository.save(pr);
-
-        return new ResponseEntity<>(product, HttpStatus.OK);
-
     }
 
     @PutMapping("/products/{id}")
-    public ResponseEntity<Product> updateTutorial(@PathVariable("id") String id, @RequestBody Product product) {
+    public ResponseEntity<?> updateProduct(@PathVariable("id") String id, @RequestBody Product product) {
 
         Optional<Product> productData = productRepository.findById(id);
         if (productData.isPresent()) {
@@ -67,14 +67,20 @@ public class ProductController {
             pr.setName(product.getName());
             pr.setPrice(product.getPrice());
 
-            return new ResponseEntity<>(this.productRepository.save(pr), HttpStatus.OK);
-        }
+            try {
+                return new ResponseEntity<>(this.productRepository.saveProduct(pr), HttpStatus.OK);
+            } catch (Exception e) {
+                ReturnBean returnBean = new ReturnBean(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+                return new ResponseEntity<>(returnBean, HttpStatus.BAD_REQUEST);
 
+            }
+
+        }
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
     @DeleteMapping("/products/{id}")
-    public ResponseEntity<HttpStatus> deleteProduct(@PathVariable("id") String id) {
+    public ResponseEntity<?> deleteProduct(@PathVariable("id") String id) {
         try {
             productRepository.deleteById(id);
             return new ResponseEntity<>(HttpStatus.OK);
@@ -82,5 +88,4 @@ public class ProductController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
 }
