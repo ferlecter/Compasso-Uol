@@ -28,12 +28,12 @@ public class ProductRepositoryImpl implements ProductCustomRepository {
                     Criteria.where("description").regex(regex),
                     Criteria.where("name").regex(regex)));
         }
-        if (maxValue > 0) {
-            criteria.add(Criteria.where("price").gte(maxValue));
+        if (minValue > 0) {
+            criteria.add(Criteria.where("price").gte(minValue));
         }
         
-        if (minValue > 0) {
-            criteria.add(Criteria.where("price").lte(minValue));
+        if (maxValue > 0) {
+            criteria.add(Criteria.where("price").lte(maxValue));
         }
 
         if (!criteria.isEmpty()) {

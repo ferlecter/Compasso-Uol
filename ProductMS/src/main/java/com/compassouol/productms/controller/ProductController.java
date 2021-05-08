@@ -19,9 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@CrossOrigin(origins = "http://localhost:8081")
+@CrossOrigin(origins = "http://localhost:9999")
 @RestController
-@RequestMapping("/api")
 public class ProductController {
 
     @Autowired
@@ -46,6 +45,18 @@ public class ProductController {
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
+    @GetMapping("/products/{id}")
+    public ResponseEntity<?> getProductById(@PathVariable("id") String id) {
+
+        Optional product = productRepository.findById(id);
+
+        if (product.isPresent()) {
+            return new ResponseEntity<>(product, HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
     @PostMapping("/products")
     public ResponseEntity<?> save(@RequestBody Product pr) {
 
@@ -68,22 +79,28 @@ public class ProductController {
             pr.setPrice(product.getPrice());
 
             try {
-                return new ResponseEntity<>(this.productRepository.saveProduct(pr), HttpStatus.OK);
+                return new ResponseEntity<>(this.productRepository.saveProduct(pr), HttpStatus.CREATED);
             } catch (Exception e) {
                 ReturnBean returnBean = new ReturnBean(HttpStatus.BAD_REQUEST.value(), e.getMessage());
                 return new ResponseEntity<>(returnBean, HttpStatus.BAD_REQUEST);
 
             }
-
         }
-        return new ResponseEntity<>(product, HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @DeleteMapping("/products/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable("id") String id) {
         try {
-            productRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.OK);
+            Optional pr = productRepository.findById(id);
+            //fazendo a consulta pois o delete é void e sempre retorna 200
+            if(pr.isPresent()){
+                productRepository.deleteById (id);
+            return new ResponseEntity<>(HttpStatus.OK); 
+            }
+           
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
