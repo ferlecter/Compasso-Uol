@@ -8,6 +8,7 @@ public class ReturnBean {
     public ReturnBean(int status_code, String message) {
         this.status_code = status_code;
         this.message = message;
+        
     }
 
     public int getStatus_code() {
